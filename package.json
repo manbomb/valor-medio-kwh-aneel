@@ -1,0 +1,24 @@
+{
+    "name": "valor-medio-kwh-aneel",
+    "version": "0.0.3",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "prepare": "npm run build",
+        "test": "jest",
+        "prepublishOnly": "npm test"
+    },
+    "author": "Sérgio Avilla",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/jest": "^29.5.14",
+        "jest": "^29.7.0",
+        "ts-jest": "^29.2.5",
+        "typescript": "^5.7.2"
+    },
+    "dependencies": {
+        "axios": "^1.7.8",
+        "date-fns": "^4.1.0"
+    }
+}
