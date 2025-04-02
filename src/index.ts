@@ -9,11 +9,20 @@ import {
     startOfMonth,
     subDays,
 } from "date-fns";
-import { AneelGateway, BandeiraTarifariaAcionada } from "./aneel.gateway";
+import {
+    AneelGateway,
+    BandeiraTarifariaAcionada,
+    TarifaDeAplicacao,
+} from "./aneel.gateway";
 import { EModalidadeTarifaria, ESubClasse, ESubGrupoTarifario } from "./types";
 import { adicionarImpostos, arred, parseValor } from "./utils";
 
 export { EModalidadeTarifaria, ESubClasse, ESubGrupoTarifario } from "./types";
+
+export interface ICache {
+    get<T>(key: string): Promise<T | null>;
+    set<T>(key: string, value: T): Promise<void>;
+}
 
 export type CalcParams = {
     dataInicio: Date;
@@ -47,7 +56,10 @@ export interface IValorMedioKwhAneelCalculo {
 }
 
 export class ValorMedioKwhAneelCalculo implements IValorMedioKwhAneelCalculo {
-    constructor(private readonly aneelGateway = new AneelGateway()) {}
+    constructor(
+        private readonly cache?: ICache,
+        private readonly aneelGateway = new AneelGateway()
+    ) {}
 
     private calcDiasFaturados(inicio: Date, fim: Date): number {
         const diasFaturados = differenceInCalendarDays(fim, inicio);
@@ -86,8 +98,20 @@ export class ValorMedioKwhAneelCalculo implements IValorMedioKwhAneelCalculo {
             diaAtual = addDays(diaAtual, 1);
         }
 
-        const acionamentosDeBandeira =
-            await this.aneelGateway.listarBandeirasTarifariasAcionamentos();
+        const acionamentosDeBandeira = await this.aneelGateway
+            .listarBandeirasTarifariasAcionamentos()
+            .then(async (acionamentos) => {
+                await this.cache?.set("acionamentos_de_bandeira", acionamentos);
+                return acionamentos;
+            })
+            .catch(async (e) => {
+                const cached =
+                    (await this.cache?.get<BandeiraTarifariaAcionada[]>(
+                        "acionamentos_de_bandeira"
+                    )) || null;
+                if (cached) return cached;
+                throw e;
+            });
 
         const acionamentoPorCompetencia = (competencia: string) => {
             const dataCompetencia = new Date(competencia);
@@ -164,13 +188,25 @@ export class ValorMedioKwhAneelCalculo implements IValorMedioKwhAneelCalculo {
         modalidadeTarifaria: EModalidadeTarifaria | string,
         subClasse?: ESubClasse | string
     ): Promise<{ TUSD: number; TE: number }> {
-        const tarifasDeAplicacao =
-            await this.aneelGateway.listarTarifasDeAplicacao(
+        const tarifasDeAplicacao = await this.aneelGateway
+            .listarTarifasDeAplicacao(
                 cnpjDistribuidora,
                 subGrupoTarifario,
                 modalidadeTarifaria,
                 subClasse
-            );
+            )
+            .then(async (tarifas) => {
+                await this.cache?.set("tarifas_de_aplicacao", tarifas);
+                return tarifas;
+            })
+            .catch(async (e) => {
+                const cached =
+                    (await this.cache?.get<TarifaDeAplicacao[]>(
+                        "tarifas_de_aplicacao"
+                    )) || null;
+                if (cached) return cached;
+                throw e;
+            });
         const converterValor = (valor: string): number =>
             parseFloat(valor.replace(",", "."));
 
