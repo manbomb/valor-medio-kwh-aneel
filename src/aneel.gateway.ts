@@ -1,5 +1,6 @@
 import axios from "axios";
 import { EModalidadeTarifaria, ESubClasse, ESubGrupoTarifario } from "./types";
+import { isBefore } from "date-fns";
 
 export type BandeiraTarifariaAcionada = {
     _id: number;
@@ -91,7 +92,9 @@ export class AneelGateway {
             }
         }
 
-        const sortedRecords = records.sort((a, b) => a._id - b._id);
+        const sortedRecords = records.sort(
+            (a, b) => isBefore(new Date(a.DatCompetencia), new Date(b.DatCompetencia)) ? -1 : 1
+        );
 
         return sortedRecords;
     }
