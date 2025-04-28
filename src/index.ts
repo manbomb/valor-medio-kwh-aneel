@@ -43,6 +43,7 @@ export type CalcResponse = {
     TEComImpostos: number;
     diasFaturados: number;
     bandeirasIncidentes: {
+        mes_ref: string;
         dias: number;
         bandeira: string;
         adicional: number;
@@ -76,6 +77,7 @@ export class ValorMedioKwhAneelCalculo implements IValorMedioKwhAneelCalculo {
         fim: Date
     ): Promise<
         {
+            mes_ref: string;
             dias: number;
             bandeira: string;
             adicional: number;
@@ -156,11 +158,14 @@ export class ValorMedioKwhAneelCalculo implements IValorMedioKwhAneelCalculo {
             })
         );
 
-        const bandeirasIncidentes = Array.from(
-            diasEBandeiraPorCompetencia.values()
-        );
+        const bandeirasIncidentesComData = Array.from(
+            diasEBandeiraPorCompetencia.entries()
+        ).map(([data, valores]) => ({
+            mes_ref: data.slice(0, 7),
+            ...valores,
+        }));
 
-        return bandeirasIncidentes;
+        return bandeirasIncidentesComData;
     }
 
     private calcAdicionalDeBandeiraMedio(
