@@ -31,6 +31,7 @@ export type CalcParams = {
     subGrupoTarifario: ESubGrupoTarifario | string;
     modalidadeTarifaria: EModalidadeTarifaria | string;
     subClasse?: ESubClasse | string;
+    sigAgente?: string;
     ICMS?: number;
     COFINS?: number;
     PIS?: number;
@@ -186,14 +187,16 @@ export class ValorMedioKwhAneelCalculo implements IValorMedioKwhAneelCalculo {
         cnpjDistribuidora: string,
         subGrupoTarifario: ESubGrupoTarifario | string,
         modalidadeTarifaria: EModalidadeTarifaria | string,
-        subClasse?: ESubClasse | string
+        subClasse?: ESubClasse | string,
+        sigAgente?: string
     ): Promise<{ TUSD: number; TE: number }> {
         const tarifasDeAplicacao = await this.aneelGateway
             .listarTarifasDeAplicacao(
                 cnpjDistribuidora,
                 subGrupoTarifario,
                 modalidadeTarifaria,
-                subClasse
+                subClasse,
+                sigAgente
             )
             .then(async (tarifas) => {
                 await this.cache?.set("tarifas_de_aplicacao", tarifas);
@@ -252,6 +255,7 @@ export class ValorMedioKwhAneelCalculo implements IValorMedioKwhAneelCalculo {
         modalidadeTarifaria,
         subClasse,
         subGrupoTarifario,
+        sigAgente,
         COFINS = 0,
         ICMS = 0,
         PIS = 0,
@@ -266,7 +270,8 @@ export class ValorMedioKwhAneelCalculo implements IValorMedioKwhAneelCalculo {
                 cnpjDistribuidora,
                 subGrupoTarifario,
                 modalidadeTarifaria,
-                subClasse
+                subClasse,
+                sigAgente
             ),
         ]);
 

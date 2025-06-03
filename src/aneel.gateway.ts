@@ -103,7 +103,8 @@ export class AneelGateway {
         cnpjDistribuidora: string,
         subGrupoTarifario: ESubGrupoTarifario | string,
         modalidadeTarifaria: EModalidadeTarifaria | string,
-        subClasse?: ESubClasse | string
+        subClasse?: ESubClasse | string,
+        sigAgente?: string
     ): Promise<TarifaDeAplicacao[]> {
         const resourceId = "fcf2906c-7c32-4b9b-a637-054e7a5234f4";
         const records: TarifaDeAplicacao[] = [];
@@ -114,7 +115,12 @@ export class AneelGateway {
             try {
                 const query = `SELECT * FROM "${resourceId}" WHERE "DscSubGrupo" = '${subGrupoTarifario}' AND "DscModalidadeTarifaria" = '${modalidadeTarifaria}' ${
                     subClasse ? `AND "DscSubClasse" = '${subClasse}'` : ""
-                } AND "DscBaseTarifaria" = 'Tarifa de Aplicação' AND "DscDetalhe" = 'Não se aplica' AND "NumCNPJDistribuidora" = '${cnpjDistribuidora}' LIMIT ${limit} OFFSET ${offset}`;
+                } AND "DscBaseTarifaria" = 'Tarifa de Aplicação' AND "DscDetalhe" = 'Não se aplica' 
+                AND ${
+                    sigAgente
+                        ? `"SigAgente" = '${sigAgente}'`
+                        : `"NumCNPJDistribuidora" = '${cnpjDistribuidora}'`
+                } LIMIT ${limit} OFFSET ${offset}`;
 
                 const response = await axios.get<
                     ApiResponse<TarifaDeAplicacao>

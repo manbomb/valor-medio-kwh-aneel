@@ -75,6 +75,7 @@ import {
 - **dataInicio** *(Date)*: Data da primeira leitura do medidor.
 - **dataFim** *(Date)*: Data da leitura atual do medidor.
 - **cnpjDistribuidora** *(string)*: CNPJ da distribuidora de energia elétrica registrada na ANEEL.
+- **sigAgente** *(string)*: Razão social da distribuidora de energia elétrica registrada na ANEEL.
 - **subGrupoTarifario** *(types.ESubGrupoTarifario)*: Subgrupo tarifário, como *B1* (Residencial).
 - **modalidadeTarifaria** *(types.EModalidadeTarifaria)*: Modalidade tarifária, como *Convencional* ou *Branca*.
 - **subClasse** *(types.ESubClasse)*: Subclasse do consumidor, como *Residencial* ou *Rural*.
