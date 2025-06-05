@@ -1,6 +1,7 @@
 import axios from "axios";
 import { EModalidadeTarifaria, ESubClasse, ESubGrupoTarifario } from "./types";
 import { isBefore } from "date-fns";
+import { ICache } from ".";
 
 export type BandeiraTarifariaAcionada = {
     _id: number;
@@ -51,12 +52,13 @@ type ApiResponse<T> = {
 export class AneelGateway {
     private readonly apiUrl: string =
         "https://dadosabertos.aneel.gov.br/api/3/action/datastore_search";
-    
+
     constructor(
+        private readonly cache: ICache | undefined,
         private readonly timeoutInMilliseconds: number | undefined
     ) {}
 
-    async listarBandeirasTarifariasAcionamentos(): Promise<
+    private async _listarBandeirasTarifariasAcionamentos(): Promise<
         BandeiraTarifariaAcionada[]
     > {
         const resourceId = "0591b8f6-fe54-437b-b72b-1aa2efd46e42";
@@ -88,8 +90,7 @@ export class AneelGateway {
             } catch (error) {
                 if (axios.isAxiosError(error)) {
                     throw new Error(
-                        `Erro ao acessar a API: ${
-                            error.response?.statusText || error.message
+                        `Erro ao acessar a API: ${error.response?.statusText || error.message
                         }`
                     );
                 }
@@ -104,7 +105,31 @@ export class AneelGateway {
         return sortedRecords;
     }
 
-    async listarTarifasDeAplicacao(
+    private bandeirasTarifariasAcionamentosCacheKey(): string {
+        return "acionamentos_de_bandeira";
+    }
+
+    async listarBandeirasTarifariasAcionamentos(): Promise<BandeiraTarifariaAcionada[]> {
+        const cacheKey = this.bandeirasTarifariasAcionamentosCacheKey();
+
+        try {
+            const acionamentos = await this._listarBandeirasTarifariasAcionamentos();
+
+            await this.cache?.set(cacheKey, acionamentos);
+
+            return acionamentos;
+        } catch (e) {
+            const cached = await this.cache?.get<BandeiraTarifariaAcionada[]>(
+                cacheKey
+            );
+
+            if (cached) return cached;
+
+            throw e;
+        }
+    }
+
+    private async _listarTarifasDeAplicacao(
         cnpjDistribuidora: string,
         subGrupoTarifario: ESubGrupoTarifario | string,
         modalidadeTarifaria: EModalidadeTarifaria | string,
@@ -118,14 +143,12 @@ export class AneelGateway {
 
         while (true) {
             try {
-                const query = `SELECT * FROM "${resourceId}" WHERE "DscSubGrupo" = '${subGrupoTarifario}' AND "DscModalidadeTarifaria" = '${modalidadeTarifaria}' ${
-                    subClasse ? `AND "DscSubClasse" = '${subClasse}'` : ""
-                } AND "DscBaseTarifaria" = 'Tarifa de Aplicação' AND "DscDetalhe" = 'Não se aplica' 
-                AND ${
-                    sigAgente
+                const query = `SELECT * FROM "${resourceId}" WHERE "DscSubGrupo" = '${subGrupoTarifario}' AND "DscModalidadeTarifaria" = '${modalidadeTarifaria}' ${subClasse ? `AND "DscSubClasse" = '${subClasse}'` : ""
+                    } AND "DscBaseTarifaria" = 'Tarifa de Aplicação' AND "DscDetalhe" = 'Não se aplica' 
+                AND ${sigAgente
                         ? `"SigAgente" = '${sigAgente}'`
                         : `"NumCNPJDistribuidora" = '${cnpjDistribuidora}'`
-                } LIMIT ${limit} OFFSET ${offset}`;
+                    } LIMIT ${limit} OFFSET ${offset}`;
 
                 const response = await axios.get<
                     ApiResponse<TarifaDeAplicacao>
@@ -147,8 +170,7 @@ export class AneelGateway {
             } catch (error) {
                 if (axios.isAxiosError(error)) {
                     throw new Error(
-                        `Erro ao acessar a API: ${
-                            error.response?.statusText || error.message
+                        `Erro ao acessar a API: ${error.response?.statusText || error.message
                         }`
                     );
                 }
@@ -159,5 +181,53 @@ export class AneelGateway {
         const sortedRecords = records.sort((a, b) => a._id - b._id);
 
         return sortedRecords;
+    }
+
+    private tarifasDeAplicacaoCacheKey(
+        cnpjDistribuidora: string,
+        subGrupoTarifario: ESubGrupoTarifario | string,
+        modalidadeTarifaria: EModalidadeTarifaria | string,
+        subClasse?: ESubClasse | string,
+        _?: string
+    ): string {
+        return `tarifas_de_aplicacao_${cnpjDistribuidora}_${subGrupoTarifario}_${modalidadeTarifaria}_${subClasse || "null"}`;
+    }
+
+    async listarTarifasDeAplicacao(
+        cnpjDistribuidora: string,
+        subGrupoTarifario: ESubGrupoTarifario | string,
+        modalidadeTarifaria: EModalidadeTarifaria | string,
+        subClasse?: ESubClasse | string,
+        sigAgente?: string
+    ): Promise<TarifaDeAplicacao[]> {
+        const cacheKey = this.tarifasDeAplicacaoCacheKey(
+            cnpjDistribuidora,
+            subGrupoTarifario,
+            modalidadeTarifaria,
+            subClasse,
+            sigAgente
+        );
+
+        try {
+            const tarifas = this._listarTarifasDeAplicacao(
+                cnpjDistribuidora,
+                subGrupoTarifario,
+                modalidadeTarifaria,
+                subClasse,
+                sigAgente,
+            );
+
+            await this.cache?.set(cacheKey, tarifas);
+
+            return tarifas;
+        } catch (e) {
+            const cached = await this.cache?.get<TarifaDeAplicacao[]>(
+                cacheKey
+            );
+
+            if (cached) return cached;
+
+            throw e;
+        }
     }
 }

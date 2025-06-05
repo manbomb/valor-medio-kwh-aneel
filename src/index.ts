@@ -12,7 +12,6 @@ import {
 import {
     AneelGateway,
     BandeiraTarifariaAcionada,
-    TarifaDeAplicacao,
 } from "./aneel.gateway";
 import { EModalidadeTarifaria, ESubClasse, ESubGrupoTarifario } from "./types";
 import { adicionarImpostos, arred, parseValor } from "./utils";
@@ -58,14 +57,15 @@ export interface IValorMedioKwhAneelCalculo {
 }
 
 export class ValorMedioKwhAneelCalculo implements IValorMedioKwhAneelCalculo {
-    private aneelGateway : AneelGateway;
+    private aneelGateway: AneelGateway;
 
     constructor(
-        private readonly cache?: ICache | undefined,
+        cache?: ICache | undefined,
         timeoutInMilliseconds?: number,
     ) {
         this.aneelGateway = new AneelGateway(
-            timeoutInMilliseconds 
+            cache,
+            timeoutInMilliseconds
         );
     }
 
@@ -107,19 +107,7 @@ export class ValorMedioKwhAneelCalculo implements IValorMedioKwhAneelCalculo {
         }
 
         const acionamentosDeBandeira = await this.aneelGateway
-            .listarBandeirasTarifariasAcionamentos()
-            .then(async (acionamentos) => {
-                await this.cache?.set("acionamentos_de_bandeira", acionamentos);
-                return acionamentos;
-            })
-            .catch(async (e) => {
-                const cached =
-                    (await this.cache?.get<BandeiraTarifariaAcionada[]>(
-                        "acionamentos_de_bandeira"
-                    )) || null;
-                if (cached) return cached;
-                throw e;
-            });
+            .listarBandeirasTarifariasAcionamentos();
 
         const acionamentoPorCompetencia = (competencia: string) => {
             const dataCompetencia = new Date(competencia);
@@ -204,19 +192,7 @@ export class ValorMedioKwhAneelCalculo implements IValorMedioKwhAneelCalculo {
                 modalidadeTarifaria,
                 subClasse,
                 sigAgente
-            )
-            .then(async (tarifas) => {
-                await this.cache?.set("tarifas_de_aplicacao", tarifas);
-                return tarifas;
-            })
-            .catch(async (e) => {
-                const cached =
-                    (await this.cache?.get<TarifaDeAplicacao[]>(
-                        "tarifas_de_aplicacao"
-                    )) || null;
-                if (cached) return cached;
-                throw e;
-            });
+            );
         const converterValor = (valor: string): number =>
             parseFloat(valor.replace(",", "."));
 
@@ -292,10 +268,10 @@ export class ValorMedioKwhAneelCalculo implements IValorMedioKwhAneelCalculo {
             TEComImpostos,
             TUSDComImpostos,
         ] = [
-            adicionarImpostos(adicionalDeBandeiraMedio, ICMS, PIS, COFINS),
-            adicionarImpostos(TE, ICMS, PIS, COFINS),
-            adicionarImpostos(TUSD, ICMS, PIS, COFINS),
-        ];
+                adicionarImpostos(adicionalDeBandeiraMedio, ICMS, PIS, COFINS),
+                adicionarImpostos(TE, ICMS, PIS, COFINS),
+                adicionarImpostos(TUSD, ICMS, PIS, COFINS),
+            ];
 
         return {
             TE: arred(TE, 3),
