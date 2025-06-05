@@ -35,6 +35,7 @@ export type CalcParams = {
     ICMS?: number;
     COFINS?: number;
     PIS?: number;
+    timeoutInMilliseconds?: number;
 };
 
 export type CalcResponse = {
@@ -57,10 +58,16 @@ export interface IValorMedioKwhAneelCalculo {
 }
 
 export class ValorMedioKwhAneelCalculo implements IValorMedioKwhAneelCalculo {
+    private aneelGateway : AneelGateway;
+
     constructor(
-        private readonly cache?: ICache,
-        private readonly aneelGateway = new AneelGateway()
-    ) {}
+        private readonly cache?: ICache | undefined,
+        timeoutInMilliseconds?: number,
+    ) {
+        this.aneelGateway = new AneelGateway(
+            timeoutInMilliseconds 
+        );
+    }
 
     private calcDiasFaturados(inicio: Date, fim: Date): number {
         const diasFaturados = differenceInCalendarDays(fim, inicio);

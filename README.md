@@ -82,6 +82,7 @@ import {
 - **ICMS** *(number)*: Percentual de ICMS aplicado.
 - **COFINS** *(number)*: Percentual de COFINS aplicado.
 - **PIS** *(number)*: Percentual de PIS aplicado.
+- **timeoutInMilliseconds** *(number)*: Valor em milissegundos máximo para requisição da Aneel responder.
 
 ### **Exemplo de Resultado**
 
