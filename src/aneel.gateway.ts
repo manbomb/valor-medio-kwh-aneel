@@ -51,6 +51,10 @@ type ApiResponse<T> = {
 export class AneelGateway {
     private readonly apiUrl: string =
         "https://dadosabertos.aneel.gov.br/api/3/action/datastore_search";
+    
+    constructor(
+        private readonly timeoutInMilliseconds: number | undefined
+    ) {}
 
     async listarBandeirasTarifariasAcionamentos(): Promise<
         BandeiraTarifariaAcionada[]
@@ -70,7 +74,7 @@ export class AneelGateway {
                         limit,
                         offset,
                     },
-                    timeout: 10000,
+                    ...(this.timeoutInMilliseconds && { timeout: this.timeoutInMilliseconds }),
                 });
 
                 const data = response.data;
@@ -129,7 +133,7 @@ export class AneelGateway {
                     params: {
                         sql: query,
                     },
-                    timeout: 10000,
+                    ...(this.timeoutInMilliseconds && { timeout: this.timeoutInMilliseconds }),
                 });
 
                 const data = response.data;
