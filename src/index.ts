@@ -14,6 +14,12 @@ import {
     BandeiraTarifariaAcionada,
     TarifaDeAplicacao,
 } from "./aneel.gateway";
+
+export {
+    BandeiraTarifariaAcionada,
+    TarifaDeAplicacao,
+} from "./aneel.gateway";
+
 import { EModalidadeTarifaria, ESubClasse, ESubGrupoTarifario } from "./types";
 import { adicionarImpostos, arred, parseValor } from "./utils";
 
