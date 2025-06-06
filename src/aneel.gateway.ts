@@ -209,7 +209,7 @@ export class AneelGateway {
         );
 
         try {
-            const tarifas = this._listarTarifasDeAplicacao(
+            const tarifas = await this._listarTarifasDeAplicacao(
                 cnpjDistribuidora,
                 subGrupoTarifario,
                 modalidadeTarifaria,
