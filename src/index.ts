@@ -12,6 +12,7 @@ import {
 import {
     AneelGateway,
     BandeiraTarifariaAcionada,
+    TarifaDeAplicacao,
 } from "./aneel.gateway";
 import { EModalidadeTarifaria, ESubClasse, ESubGrupoTarifario } from "./types";
 import { adicionarImpostos, arred, parseValor } from "./utils";
@@ -19,8 +20,8 @@ import { adicionarImpostos, arred, parseValor } from "./utils";
 export { EModalidadeTarifaria, ESubClasse, ESubGrupoTarifario } from "./types";
 
 export interface ICache {
-    get<T extends Array<any>>(key: string): Promise<T | null>;
-    set<T extends Array<any>>(key: string, value: T): Promise<void>;
+    get<T extends Array<BandeiraTarifariaAcionada | TarifaDeAplicacao>>(key: string): Promise<T | null>;
+    set<T extends Array<BandeiraTarifariaAcionada | TarifaDeAplicacao>>(key: string, value: T): Promise<void>;
 }
 
 export type CalcParams = {
