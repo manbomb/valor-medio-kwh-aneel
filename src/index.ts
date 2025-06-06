@@ -19,8 +19,8 @@ import { adicionarImpostos, arred, parseValor } from "./utils";
 export { EModalidadeTarifaria, ESubClasse, ESubGrupoTarifario } from "./types";
 
 export interface ICache {
-    get<T>(key: string): Promise<T | null>;
-    set<T>(key: string, value: T): Promise<void>;
+    get<T extends Array<any>>(key: string): Promise<T | null>;
+    set<T extends Array<any>>(key: string, value: T): Promise<void>;
 }
 
 export type CalcParams = {
