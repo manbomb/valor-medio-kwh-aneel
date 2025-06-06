@@ -123,7 +123,11 @@ export class AneelGateway {
                 cacheKey
             );
 
-            if (cached) return cached;
+            if (cached) {
+                return cached.sort(
+                    (a, b) => isBefore(new Date(a.DatCompetencia), new Date(b.DatCompetencia)) ? -1 : 1
+                );
+            }
 
             throw e;
         }
@@ -225,7 +229,9 @@ export class AneelGateway {
                 cacheKey
             );
 
-            if (cached) return cached;
+            if (cached) {
+                return cached.sort((a, b) => a._id - b._id);
+            }
 
             throw e;
         }
