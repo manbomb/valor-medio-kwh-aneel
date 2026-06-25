@@ -151,21 +151,27 @@ export class AneelGateway {
 
         while (true) {
             try {
-                const query = `SELECT * FROM "${resourceId}" WHERE "DscSubGrupo" = '${subGrupoTarifario}' AND "DscModalidadeTarifaria" = '${modalidadeTarifaria}' ${subClasse ? `AND "DscSubClasse" = '${subClasse}'` : ""
-                    } AND "DscBaseTarifaria" = 'Tarifa de Aplicação' AND "DscDetalhe" = 'Não se aplica' 
-                AND ${sigAgente
-                        ? `"SigAgente" = '${sigAgente}'`
-                        : `"NumCNPJDistribuidora" = '${cnpjDistribuidora}'`
-                    } LIMIT ${limit} OFFSET ${offset}`;
-
-                const response = await axios.get<
-                    ApiResponse<TarifaDeAplicacao>
-                >(this.apiUrl + "_sql", {
-                    params: {
-                        sql: query,
+                const response = await axios.post<ApiResponse<TarifaDeAplicacao>>(
+                    this.apiUrl,
+                    {
+                        resource_id: resourceId,
+                        filters: {
+                            "DscSubGrupo": subGrupoTarifario,
+                            "DscModalidadeTarifaria": modalidadeTarifaria,
+                            ...(subClasse && { "DscSubClasse": subClasse }),
+                            "DscBaseTarifaria": "Tarifa de Aplicação",
+                            "DscDetalhe": "Não se aplica",
+                            ...(sigAgente
+                                ? { "SigAgente": sigAgente }
+                                : { "NumCNPJDistribuidora": cnpjDistribuidora }),
+                        },
+                        limit,
+                        offset,
                     },
-                    ...(this.timeoutInMilliseconds && { timeout: this.timeoutInMilliseconds }),
-                });
+                    {
+                        ...(this.timeoutInMilliseconds && { timeout: this.timeoutInMilliseconds }),
+                    },
+                );
 
                 const data = response.data;
                 records.push(...data.result.records);
